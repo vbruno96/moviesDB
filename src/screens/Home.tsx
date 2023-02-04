@@ -1,5 +1,6 @@
 import { View, Text, FlatList } from "react-native"
 import { MovieItemList } from "../components/MovieItemList"
+import { useNavigation } from "@react-navigation/native"
 
 const data = [
   {
@@ -414,6 +415,7 @@ type MoviesNowPlayingData = {
 }
 
 export function Home() {
+  const { navigate } = useNavigation()
   return (
     <View className="flex-1 bg-background pl-6 pr-8 pt-8">
       <Text
@@ -423,7 +425,7 @@ export function Home() {
       </Text>
       <FlatList
         data={data}
-        renderItem={({item}) => <MovieItemList movie={item} />}
+        renderItem={({item}) => <MovieItemList movie={item} onPress={() => navigate('movie', { movieId: item.id})} />}
         keyExtractor={item => String(item.id)}
         showsVerticalScrollIndicator={false} 
       />
