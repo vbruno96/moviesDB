@@ -1,49 +1,13 @@
-import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native"
+import { View, Text, Image, ScrollView, TouchableOpacity, Alert } from "react-native"
 import { ArrowLeft } from "phosphor-react-native"
 import { useFormatBrDate } from "../hooks/useFormatBrDate"
 import { ProgressBar } from "../components/ProgressBar"
 import { formatCurrency } from "react-native-format-currency"
-import { useNavigation } from "@react-navigation/native"
+import { useNavigation, useRoute } from "@react-navigation/native"
+import { useEffect, useState } from "react"
+import { api } from "../lib/axios"
+import { Loading } from "../components/Loading"
 
-const data = {
-  "backdrop_path": "/faXT8V80JRhnArTAeYXz0Eutpv9.jpg",
-  "budget": 90000000,
-  "genres": [
-    {
-      "id": 16,
-      "name": "Animação"
-    },
-    {
-      "id": 12,
-      "name": "Aventura"
-    },
-    {
-      "id": 35,
-      "name": "Comédia"
-    },
-    {
-      "id": 10751,
-      "name": "Família"
-    },
-    {
-      "id": 14,
-      "name": "Fantasia"
-    }
-  ],
-  "id": 315162,
-  "overview": "O Gato de Botas descobre que sua paixão pela aventura cobrou seu preço: ele queimou oito de suas nove vidas, deixando-o com apenas uma vida restante. Gato parte em uma jornada épica para encontrar o mítico Último Desejo e restaurar suas nove vidas.",
-  "production_companies": [
-    {
-      "name": "Universal Pictures",
-    },
-    {
-      "name": "DreamWorks Animation",
-    }
-  ],
-  "release_date": "2022-12-07",
-  "title": "Gato de Botas 2: O Último Pedido",
-  "vote_average": 8.567,
-} as MovieData
 
 type MovieData = {
   backdrop_path: string
@@ -63,17 +27,43 @@ type MovieData = {
   vote_average: number
 }
 
+type Params = {
+  movieId: number
+}
+
 
 export function Movie() {
-  const formatedDate = useFormatBrDate(data.release_date)
-  const uriImagesTMDB = `https://image.tmdb.org/t/p/w500/${data.backdrop_path}`
-  const voteAverageOneDecimal = data.vote_average.toFixed(1)
-  const [budgetFormatedCurrency] = formatCurrency({amount: data.budget, code: 'USD'})
-  const genres = data.genres.map(genre => genre.name)
-  const companies = data.production_companies.map(companie => companie.name)
+  const route = useRoute()
+  const { movieId } = route.params as Params
+
+  const [movie, setMovie] = useState<MovieData>()
+  const [loading, setLoading] = useState(false)
   
   const { goBack } = useNavigation()
-  
+
+  async function fetchMovie() {
+    setLoading(true)
+    await api.get<MovieData>(`movie/${movieId}`)
+      .then(res => setMovie(res.data))
+      .catch(err => {
+        Alert.alert('Ops!!!', 'Não foi possível carregar o filme')
+      })
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchMovie()
+  }, [])
+
+  const formatedDate = movie?.release_date ? useFormatBrDate(movie.release_date) : 'Data de lançamento não informada'
+  const uriImagesTMDB = `https://image.tmdb.org/t/p/w500/${movie?.backdrop_path}`
+  const voteAverageOneDecimal = movie?.vote_average.toFixed(1)
+  const [budgetFormatedCurrency] = movie?.budget ? formatCurrency({amount: movie.budget, code: 'USD'}) : ['Orçamento não informado']
+  const genres = movie?.genres.map(genre => genre.name)
+  const companies = movie?.production_companies.map(companie => companie.name)
+
+  if (loading) return <Loading />
+
   return (
     <View
       className="flex-1 bg-background px-6 pt-8"
@@ -97,12 +87,12 @@ export function Movie() {
           <Text
             className="text-white font-extrabold text-2xl text-center"
           >
-            {data.title}
+            {movie?.title}
           </Text>
           <Text
             className="mt-2.5 text-white font-light text-sm"
           >
-            {formatedDate}
+            { formatedDate }
           </Text>
         </View>
       </View>
@@ -115,15 +105,15 @@ export function Movie() {
         <Image
             className="rounded-lg mt-10 w-full h-52"
             source={{
-              uri: uriImagesTMDB
+              uri: `https://image.tmdb.org/t/p/w500/${uriImagesTMDB}`
             }}
           />
           <Text
             className="mt-3 mb-3 text-lg text-white text-center"
           >
-            {voteAverageOneDecimal}
+            { voteAverageOneDecimal }
           </Text>
-          <ProgressBar voteAverage={data.vote_average} />
+          <ProgressBar voteAverage={movie?.vote_average ? movie.vote_average : 0} />
           <Text
             className="mt-11 text-white font-semibold text-base"
           >
@@ -132,9 +122,7 @@ export function Movie() {
           <Text
             className="mt-3.5 text-white text-sm"
           >
-            {
-              genres.toString()
-            }
+            { genres }
           </Text>
           <Text
             className="mt-8 text-white font-semibold text-base"
@@ -144,9 +132,7 @@ export function Movie() {
           <Text
             className="mt-3.5 text-white text-sm"
           >
-            {
-              data.overview
-            }
+            { movie?.overview }
           </Text>
           <Text
             className="mt-8 text-white font-semibold text-base"
@@ -156,9 +142,7 @@ export function Movie() {
           <Text
             className="mt-3.5 text-white text-sm"
           >
-            {
-              budgetFormatedCurrency
-            }
+            { budgetFormatedCurrency }
           </Text>
           <Text
             className="mt-8 text-white font-semibold text-base"
@@ -168,9 +152,7 @@ export function Movie() {
           <Text
             className="mt-3.5 text-white text-sm"
           >
-            {
-              companies.toString()
-            }
+            { companies }
           </Text>
       </ScrollView>
     </View>
