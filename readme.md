@@ -16,7 +16,9 @@ e uma tela com os detalhes do filme.
 * [Nativewind](https://www.nativewind.dev/)
 
 ## Observações 🖋️
-O app possuí uma fake auth api, para acessar a lista de filmes basta usar o email user@moviesdb.com e senha moviesDB123
+O app possuí uma fake auth api, para acessar a lista de filmes basta usar o email user@moviesdb.com e senha moviesDB123.
+É necessário colocar a chave da api no aquivo axios.ts dentro de src/lib
+
 
 ## Autor
 Bruno Vinícius
