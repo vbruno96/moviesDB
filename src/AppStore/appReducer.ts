@@ -15,5 +15,10 @@ export function appReducer(state: AppState, action: AppActions) {
         ...state,
         isLoading: action.payload.isLoading
       }
+    case TypeAppActions.SIGNOUT:
+      return {
+        ...state,
+        userIsLogged: action.payload.userIsLogged
+      }
   }
 }

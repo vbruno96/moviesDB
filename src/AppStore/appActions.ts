@@ -1,6 +1,7 @@
 export enum TypeAppActions {
   SIGNIN,
-  FETCH
+  FETCH,
+  SIGNOUT
 }
 
 export type SignInAction = {
@@ -18,4 +19,11 @@ export type FetchAction = {
   }
 }
 
-export type AppActions = SignInAction | FetchAction
+export type SignOutAction = {
+  type: TypeAppActions.SIGNOUT,
+  payload: {
+    userIsLogged: boolean
+  }
+}
+
+export type AppActions = SignInAction | FetchAction | SignOutAction

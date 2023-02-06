@@ -7,6 +7,8 @@ import { useNavigation, useRoute } from "@react-navigation/native"
 import { useEffect, useState } from "react"
 import { api } from "../lib/axios"
 import { Loading } from "../components/Loading"
+import { useApp } from "../hooks/useAuth"
+import { TypeAppActions } from "../AppStore/appActions"
 
 
 type MovieData = {
@@ -37,18 +39,18 @@ export function Movie() {
   const { movieId } = route.params as Params
 
   const [movie, setMovie] = useState<MovieData>()
-  const [loading, setLoading] = useState(false)
+  const {dispatch, state} = useApp()
   
   const { goBack } = useNavigation()
 
   async function fetchMovie() {
-    setLoading(true)
+    dispatch({type: TypeAppActions.FETCH, payload: { isLoading: true }})
     await api.get<MovieData>(`movie/${movieId}`)
       .then(res => setMovie(res.data))
       .catch(err => {
         Alert.alert('Ops!!!', 'Não foi possível carregar o filme')
       })
-      .finally(() => setLoading(false))
+      .finally(() => dispatch({type: TypeAppActions.FETCH, payload: { isLoading: false }}))
   }
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export function Movie() {
   const genres = movie?.genres.map(genre => genre.name)
   const companies = movie?.production_companies.map(companie => companie.name)
 
-  if (loading) return <Loading />
+  if (state.isLoading) return <Loading />
 
   return (
     <View

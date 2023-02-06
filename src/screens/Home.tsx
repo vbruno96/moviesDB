@@ -1,9 +1,12 @@
-import { View, Text, FlatList, Alert } from "react-native"
+import { View, Text, FlatList, Alert, TouchableOpacity } from "react-native"
 import { MovieItemList } from "../components/MovieItemList"
 import { useNavigation } from "@react-navigation/native"
 import { useEffect, useState } from "react"
 import { api } from "../lib/axios"
 import { Loading } from "../components/Loading"
+import { useApp } from "../hooks/useAuth"
+import { TypeAppActions } from "../AppStore/appActions"
+import { SignOut } from "phosphor-react-native"
 
 export type MoviesData = {
   genre_ids: number[]
@@ -25,10 +28,11 @@ export function Home() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState<number>()
   const [movies, setMovies] = useState<MoviesData[]>([])
-  const [loading, setLoading] = useState(false)
+  
+  const {dispatch, state} = useApp()
   
   async function fetchMoviesData(page: number) {
-    setLoading(true)
+    dispatch({type: TypeAppActions.FETCH, payload: { isLoading: true }})
     await api.get<MoviesNowPlayingData>('movie/popular', {
       params: {
         page
@@ -42,7 +46,11 @@ export function Home() {
       .catch(err => {
         Alert.alert('Ops!!!', 'Não foi possível carregar os filmes')
       })
-      .finally(() => setLoading(false))
+      .finally(() => dispatch({type: TypeAppActions.FETCH, payload: { isLoading: false }}))
+  }
+
+  function logout() {
+    dispatch({type: TypeAppActions.SIGNOUT, payload: { userIsLogged: false }})
   }
   
   useEffect(() => {
@@ -51,15 +59,28 @@ export function Home() {
   
   const { navigate } = useNavigation()
 
-  if (loading && page === 1) return <Loading />
+  if (state.isLoading && page === 1) return <Loading />
 
   return (
     <View className="flex-1 bg-background pl-6 pr-8 pt-8">
-      <Text
-        className="text-white font-extrabold text-3xl mb-14"
+      <View
+        className="flex-row justify-between items-center mb-14"
       >
-        Movies
-      </Text>
+        <Text
+          className="text-white font-extrabold text-3xl"
+        >
+          Movies
+        </Text>
+        <TouchableOpacity
+          activeOpacity={.7}
+          onPress={logout}
+        >
+          <SignOut
+              size={30}
+              color="#FFF"
+            />
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={movies}
         renderItem={({item}) => <MovieItemList movie={item} onPress={() => navigate('movie', { movieId: item.id})} />}
